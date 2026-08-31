@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "thundermail-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-22",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "api.thunderanticheat.app",
+      "custom_domain": true
+    },
+    {
+      "pattern": "temp.thunderanticheat.app/api/*",
+      "zone_name": "thunderanticheat.app"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "thundermail-db",
+      "database_id": "fe3db7a7-ca63-4494-9fe6-306ab69e5aae",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "MAIL_DOMAIN": "mail.thunderanticheat.app",
+    "WEB_ORIGIN": "https://temp.thunderanticheat.app",
+    "MAILBOX_TTL_SECONDS": "900"
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
+}
