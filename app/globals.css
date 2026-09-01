@@ -52,18 +52,20 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 50% -20%, rgb(124 58 237 / 0.12), transparent 34rem),
+    radial-gradient(circle at 18% -10%, rgb(124 58 237 / 0.16), transparent 32rem),
+    radial-gradient(circle at 90% 8%, rgb(79 70 229 / 0.08), transparent 26rem),
     var(--background);
+  background-attachment: fixed;
 }
 
 :root {
-  --background: oklch(0.985 0.004 285);
-  --foreground: oklch(0.17 0.012 285);
+  --background: oklch(0.982 0.006 285);
+  --foreground: oklch(0.16 0.016 285);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.24 292);
+  --primary: oklch(0.57 0.245 292);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -80,7 +82,7 @@ body {
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.7rem;
+  --radius: 0.8rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -92,18 +94,18 @@ body {
 }
 
 .dark {
-  --background: oklch(0.115 0.01 285);
-  --foreground: oklch(0.96 0.006 285);
-  --card: oklch(0.15 0.012 285);
+  --background: oklch(0.105 0.012 285);
+  --foreground: oklch(0.965 0.006 285);
+  --card: oklch(0.145 0.015 285);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.64 0.235 292);
+  --primary: oklch(0.665 0.225 292);
   --primary-foreground: oklch(0.98 0 0);
   --secondary: oklch(0.2 0.014 285);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.19 0.013 285);
-  --muted-foreground: oklch(0.63 0.012 285);
+  --muted: oklch(0.185 0.016 285);
+  --muted-foreground: oklch(0.66 0.012 285);
   --accent: oklch(0.22 0.016 285);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -123,6 +125,11 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+::selection {
+  background: rgb(139 92 246 / 0.35);
+  color: white;
 }
 
 @layer base {
