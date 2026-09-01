@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { Toaster } from '@/components/ui/toast';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import './globals.css';
 
 const geistSans = Geist({
@@ -19,15 +21,24 @@ export const metadata: Metadata = {
     'Create a private temporary email address in seconds. No account, no tracking, and automatic expiration.',
   openGraph: {
     title: 'ThunderMail — Temporary email, instantly',
-    description: 'Private temporary email with no account, no tracking, and automatic expiration.',
+    description:
+      'Private temporary email with no account, no tracking, and automatic expiration.',
     type: 'website',
     url: '/',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'ThunderMail temporary email inbox' }],
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'ThunderMail temporary email inbox',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ThunderMail — Temporary email, instantly',
-    description: 'Private temporary email with no account, no tracking, and automatic expiration.',
+    description:
+      'Private temporary email with no account, no tracking, and automatic expiration.',
     images: ['/og.png'],
   },
 };
@@ -42,7 +53,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Toaster>
+          <TooltipProvider>{children}</TooltipProvider>
+        </Toaster>
       </body>
     </html>
   );
