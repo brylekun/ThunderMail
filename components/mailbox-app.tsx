@@ -971,7 +971,7 @@ function MessageViewer({
           <iframe
             className="h-full min-h-0 w-full rounded-2xl border border-app-border bg-white shadow-app-elevated"
             referrerPolicy="no-referrer"
-            sandbox=""
+            sandbox="allow-popups allow-popups-to-escape-sandbox"
             srcDoc={message.htmlBody}
             title={`Email: ${message.subject || 'No subject'}`}
           />
