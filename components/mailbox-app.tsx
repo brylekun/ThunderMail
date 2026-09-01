@@ -544,6 +544,19 @@ export function MailboxApp() {
     }
   };
 
+  const closeSelectedMessage = () => {
+    const selectedIndex = messages.findIndex(
+      (message) => message.id === selectedId,
+    );
+    setReaderOpen(false);
+    setSelectedId(null);
+    setSelectedMessage(null);
+    setMessageLoading(false);
+    window.requestAnimationFrame(() => {
+      if (selectedIndex >= 0) messageRowRefs.current[selectedIndex]?.focus();
+    });
+  };
+
   const handleMessageKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
     index: number,
@@ -841,7 +854,11 @@ export function MailboxApp() {
           </aside>
 
           <div className="hidden min-h-0 lg:flex">
-            <MessageViewer loading={messageLoading} message={selectedMessage} />
+            <MessageViewer
+              loading={messageLoading}
+              message={selectedMessage}
+              onBack={closeSelectedMessage}
+            />
           </div>
         </div>
 
@@ -904,9 +921,11 @@ export function MailboxApp() {
 function MessageViewer({
   loading,
   message,
+  onBack,
 }: {
   loading: boolean;
   message: Message | null;
+  onBack?: () => void;
 }) {
   if (loading) {
     return (
@@ -938,31 +957,43 @@ function MessageViewer({
   return (
     <article className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="shrink-0 border-b border-app-border px-5 py-4 sm:px-7 sm:py-5">
-        <div
-          className="flex items-start justify-between gap-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-1 motion-safe:duration-200"
-          key={message.id}
-        >
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold tracking-[-0.02em]">
-              {message.subject || '(No subject)'}
-            </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400">
-              <span className="font-medium text-zinc-300">
-                {senderName(message)}
-              </span>
-              <span>&lt;{message.fromAddress}&gt;</span>
-              <span className="text-zinc-500">•</span>
-              <span>to {message.toAddress}</span>
-            </div>
-          </div>
-          {message.htmlBody && (
-            <Badge
-              className="border border-emerald-400/15 bg-emerald-400/[0.07] text-emerald-300"
-              variant="outline"
+        <div className="flex items-start gap-3">
+          {onBack && (
+            <Button
+              className="mt-0.5 shrink-0 rounded-lg text-zinc-400 hover:bg-app-surface-raised hover:text-white"
+              onClick={onBack}
+              size="sm"
+              variant="ghost"
             >
-              Safe HTML
-            </Badge>
+              <ArrowLeft data-icon="inline-start" /> Inbox
+            </Button>
           )}
+          <div
+            className="flex min-w-0 flex-1 items-start justify-between gap-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-1 motion-safe:duration-200"
+            key={message.id}
+          >
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-semibold tracking-[-0.02em]">
+                {message.subject || '(No subject)'}
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400">
+                <span className="font-medium text-zinc-300">
+                  {senderName(message)}
+                </span>
+                <span>&lt;{message.fromAddress}&gt;</span>
+                <span className="text-zinc-500">•</span>
+                <span>to {message.toAddress}</span>
+              </div>
+            </div>
+            {message.htmlBody && (
+              <Badge
+                className="border border-emerald-400/15 bg-emerald-400/[0.07] text-emerald-300"
+                variant="outline"
+              >
+                Safe HTML
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
