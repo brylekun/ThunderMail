@@ -290,7 +290,7 @@ function cleanEmailHtml(input: string): string {
     ],
     allowedAttributes: {
       '*': ['style', 'dir', 'lang', 'title'],
-      a: ['href', 'title'],
+      a: ['href', 'title', 'target', 'rel'],
       ol: ['start', 'type'],
       li: ['value'],
       table: ['width', 'height', 'align', 'border', 'cellpadding', 'cellspacing', 'bgcolor', 'role'],
