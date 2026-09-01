@@ -30,7 +30,8 @@ import {
 } from '@/lib/api';
 import { clearStoredMailbox, loadStoredMailbox, storeMailbox } from '@/lib/mailbox-storage';
 
-const POLL_INTERVAL_MS = 5_000;
+const AUTO_CHECK_INTERVAL_MS = 10_000;
+const AUTO_CHECK_DURATION_SECONDS = 3 * 60;
 
 function formatRemaining(expiresAt: number, now: number): string {
   const seconds = Math.max(0, expiresAt - now);
@@ -60,7 +61,9 @@ export function MailboxApp() {
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [messageLoading, setMessageLoading] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
   const creatingRef = useRef(false);
+  const refreshingRef = useRef(false);
 
   const installMailbox = useCallback((nextMailbox: Mailbox) => {
     storeMailbox(nextMailbox);
@@ -103,9 +106,18 @@ export function MailboxApp() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const updateVisibility = () => setIsPageVisible(document.visibilityState === 'visible');
+    updateVisibility();
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, []);
+
   const refreshMessages = useCallback(
     async (showSpinner = false) => {
       if (!mailbox || mailbox.expiresAt <= Math.floor(Date.now() / 1000)) return;
+      if (refreshingRef.current) return;
+      refreshingRef.current = true;
       if (showSpinner) setRefreshing(true);
       try {
         const nextMessages = await listMessages(mailbox);
@@ -118,6 +130,7 @@ export function MailboxApp() {
       } catch (requestError) {
         setError(requestError instanceof Error ? requestError.message : 'Inbox refresh failed.');
       } finally {
+        refreshingRef.current = false;
         setRefreshing(false);
       }
     },
@@ -125,11 +138,27 @@ export function MailboxApp() {
   );
 
   useEffect(() => {
-    if (!mailbox) return;
+    if (!mailbox || !isPageVisible || document.visibilityState !== 'visible') return;
     void refreshMessages();
-    const poller = window.setInterval(() => void refreshMessages(), POLL_INTERVAL_MS);
-    return () => window.clearInterval(poller);
-  }, [mailbox, refreshMessages]);
+
+    const autoCheckEndsAt = Math.min(mailbox.createdAt + AUTO_CHECK_DURATION_SECONDS, mailbox.expiresAt);
+    const autoCheckRemainingMs = autoCheckEndsAt * 1_000 - Date.now();
+    if (autoCheckRemainingMs <= 0) return;
+
+    const poller = window.setInterval(() => {
+      if (Date.now() >= autoCheckEndsAt * 1_000) {
+        window.clearInterval(poller);
+        return;
+      }
+      void refreshMessages();
+    }, AUTO_CHECK_INTERVAL_MS);
+    const stopTimer = window.setTimeout(() => window.clearInterval(poller), autoCheckRemainingMs);
+
+    return () => {
+      window.clearInterval(poller);
+      window.clearTimeout(stopTimer);
+    };
+  }, [isPageVisible, mailbox, refreshMessages]);
 
   useEffect(() => {
     if (!mailbox || !selectedId) {
@@ -164,6 +193,11 @@ export function MailboxApp() {
   }, [mailbox, makeMailbox, now]);
 
   const remaining = useMemo(() => (mailbox ? formatRemaining(mailbox.expiresAt, now) : '--:--'), [mailbox, now]);
+  const autoCheckEndsAt = mailbox
+    ? Math.min(mailbox.createdAt + AUTO_CHECK_DURATION_SECONDS, mailbox.expiresAt)
+    : 0;
+  const autoCheckRemaining = autoCheckEndsAt > now ? formatRemaining(autoCheckEndsAt, now) : '00:00';
+  const isAutoChecking = Boolean(mailbox && isPageVisible && autoCheckEndsAt > now);
 
   const copyAddress = async () => {
     if (!mailbox) return;
@@ -230,8 +264,13 @@ export function MailboxApp() {
 
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5">
           <div className="flex items-center gap-2 text-xs text-zinc-400">
-            <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-50" /><span className="relative inline-flex size-2 rounded-full bg-emerald-400" /></span>
-            Listening for new mail<Separator className="mx-1 h-4!" orientation="vertical" /><Clock3 className="size-3.5" /><span className="font-mono text-zinc-300">{remaining}</span>
+            <span className="relative flex size-2">
+              {isAutoChecking && <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-50" />}
+              <span className={`relative inline-flex size-2 rounded-full ${isAutoChecking ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+            </span>
+            <span>{isAutoChecking ? 'Checking automatically' : 'Auto-check paused'}</span>
+            {isAutoChecking && <><Separator className="mx-1 h-4!" orientation="vertical" /><Clock3 className="size-3.5" /><span className="font-mono text-zinc-300">{autoCheckRemaining}</span></>}
+            <Separator className="mx-1 h-4!" orientation="vertical" /><span className="text-zinc-500">Inbox</span><span className="font-mono text-zinc-300">{remaining}</span>
           </div>
           <div className="flex items-center gap-1">
             <Button className="text-zinc-400" disabled={!mailbox || refreshing} onClick={() => void refreshMessages(true)} size="sm" suppressHydrationWarning variant="ghost">
@@ -260,7 +299,7 @@ export function MailboxApp() {
               {messages.length === 0 && status !== 'starting' && (
                 <div className="flex flex-col items-center px-8 py-14 text-center">
                   <span className="mb-3 grid size-10 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.025]"><Check className="size-4 text-zinc-500" /></span>
-                  <p className="text-xs font-medium text-zinc-400">Waiting for your first email</p><p className="mt-1 text-[11px] leading-5 text-zinc-600">New messages appear automatically.</p>
+                  <p className="text-xs font-medium text-zinc-400">Waiting for your first email</p><p className="mt-1 text-[11px] leading-5 text-zinc-600">{isAutoChecking ? 'Checking automatically for the first 3 minutes.' : 'Click Refresh to check for new messages.'}</p>
                 </div>
               )}
             </div>
